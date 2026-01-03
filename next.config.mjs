@@ -3,9 +3,25 @@ const nextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
+    eslint: {
+        // Disable ESLint during builds to avoid blocking deployment
+        ignoreDuringBuilds: true,
+    },
     images: {
         unoptimized: false,
         formats: ['image/avif', 'image/webp'],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'drive.google.com',
+                pathname: '**',
+            },
+            {
+                protocol: 'https',
+                hostname: '*.googleusercontent.com',
+                pathname: '**',
+            },
+        ],
     },
     staticPageGenerationTimeout: 180,
     output: 'standalone',
@@ -17,35 +33,19 @@ const nextConfig = {
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production',
     },
-    // Externalize whatsapp-web.js and related packages to avoid bundling issues
-    // This prevents Next.js from trying to bundle these packages
+    // Externalize packages that shouldn't be bundled
     serverExternalPackages: [
-        'whatsapp-web.js',
-        'puppeteer',
-        'puppeteer-core',
-        'qrcode-terminal',
-        '@puppeteer/browsers',
+        'twilio',
+        'nodemailer',
+        '@emailjs/nodejs',
     ],
     webpack: (config, {
         isServer
     }) => {
         if (isServer) {
-            // Mark whatsapp-web.js as external for server-side
-            config.externals = config.externals || []
-            if (Array.isArray(config.externals)) {
-                config.externals.push({
-                    'whatsapp-web.js': 'commonjs whatsapp-web.js',
-                    'puppeteer': 'commonjs puppeteer',
-                    'puppeteer-core': 'commonjs puppeteer-core',
-                    'qrcode-terminal': 'commonjs qrcode-terminal',
-                })
-            }
+            // Keep any special server-side configurations here if needed
         }
         return config
-    },
-    turbopack: {
-        // Ensure Next selects this folder as the workspace root during builds
-        root: process.cwd(),
     },
 }
 

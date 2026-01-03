@@ -16,11 +16,18 @@ export function Navbar() {
           <Image
             src="/vignan-logo.png"
             alt="Vignan Logo"
-            width={32}
-            height={32}
-            className="h-8 w-8 object-contain"
+            width={40}
+            height={40}
+            className="h-10 w-10 object-contain mr-2"
           />
-          <span className="hidden sm:inline">Vignan NSS BloodConnect</span>
+          <Image
+            src="/nss-logo.png"
+            alt="NSS Logo"
+            width={40}
+            height={40}
+            className="h-10 w-10 object-contain mr-2"
+          />
+          <span className="hidden sm:inline">Vignan Pranadhara</span>
           <span className="sm:hidden">NSS</span>
         </Link>
 
@@ -34,6 +41,12 @@ export function Navbar() {
           </Link>
           <Link href="/compatibility" prefetch className="text-sm font-medium hover:text-primary transition-colors">
             Blood Groups
+          </Link>
+          <Link href="/camps" prefetch={false} className="text-sm font-medium hover:text-primary transition-colors">
+            Camps
+          </Link>
+          <Link href="/team" prefetch={false} className="text-sm font-medium hover:text-primary transition-colors">
+            Pranadhara Team
           </Link>
         </div>
 
@@ -69,6 +82,12 @@ export function Navbar() {
             </Link>
             <Link href="/compatibility" prefetch className="block text-sm font-medium hover:text-primary transition-colors py-2">
               Blood Groups
+            </Link>
+            <Link href="/camps" prefetch={false} className="block text-sm font-medium hover:text-primary transition-colors py-2">
+              Camps
+            </Link>
+            <Link href="/team" prefetch={false} className="block text-sm font-medium hover:text-primary transition-colors py-2">
+              Pranadhara Team
             </Link>
             <div className="flex flex-col gap-2 pt-3 border-t border-border">
               <Button variant="outline" size="sm" asChild className="w-full">

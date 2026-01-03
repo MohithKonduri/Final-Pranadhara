@@ -25,7 +25,7 @@ export function AdminSidebar() {
   ]
 
   return (
-    <aside className="w-64 border-r border-border bg-muted/50 min-h-screen flex flex-col">
+    <aside className="hidden md:flex w-64 border-r border-border bg-muted/50 min-h-screen flex-col">
       <div className="p-6 border-b border-border">
         <Link href="/admin/dashboard" className="flex items-center gap-2 font-bold text-lg">
           <Image

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle, XCircle, Loader2, Smartphone, MessageSquare, Send, Users, AlertCircle } from "lucide-react"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { AdminMobileNav } from "@/components/admin-mobile-nav"
 import { db } from "@/lib/firebase"
 import { collection, getDocs } from "firebase/firestore"
 
@@ -142,7 +143,8 @@ export default function AdminSMSPage() {
         <div className="flex h-screen">
             <AdminSidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="border-b border-border bg-background px-6 py-4">
+                <header className="border-b border-border bg-background px-6 py-4 flex items-center">
+                    <AdminMobileNav />
                     <h1 className="text-2xl font-bold">SMS Notifications</h1>
                 </header>
 

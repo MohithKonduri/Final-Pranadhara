@@ -76,7 +76,7 @@ export function DashboardSidebar() {
               <Link key={link.href} href={link.href} className="flex-1">
                 <Button
                   variant={isActive ? "default" : "ghost"}
-                  className="w-full flex-col h-auto py-3 px-2"
+                  className="w-full flex-col h-auto py-3 px-2 rounded-none"
                 >
                   <Icon className="h-5 w-5 mb-1" />
                   <span className="text-xs">{link.label.split(' ')[0]}</span>
@@ -84,6 +84,16 @@ export function DashboardSidebar() {
               </Link>
             )
           })}
+          <div className="flex-1">
+            <Button
+              variant="ghost"
+              className="w-full flex-col h-auto py-3 px-2 rounded-none hover:bg-destructive/10 hover:text-destructive"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5 mb-1" />
+              <span className="text-xs">Logout</span>
+            </Button>
+          </div>
         </nav>
       </div>
     </>

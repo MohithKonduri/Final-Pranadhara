@@ -36,3 +36,46 @@ export interface BloodCompatibility {
   canDonate: string[]
   canReceive: string[]
 }
+
+export interface Camp {
+  id: string
+  name: string
+  location: string
+  district: string
+  date: string
+  time?: string // Added for Google Sheets
+  startTime?: string
+  endTime?: string
+  description?: string
+  organizer: string
+  contact?: string // Added for Google Sheets
+  contactPhone?: string
+  contactEmail?: string
+  expectedDonors?: number
+  actualDonors?: number
+  status?: "upcoming" | "ongoing" | "completed" | "cancelled" // Made optional
+  imageUrl?: string // Image URL from Google Sheets
+  createdAt?: string // Made optional
+  updatedAt?: string // Made optional
+}
+
+export interface PranadharaAdmin {
+  id: string
+  name: string
+  email: string
+  phone: string
+  role: "super_admin" | "admin" | "moderator"
+  photoUrl?: string // Photo URL from Google Sheets
+  designation?: string
+  permissions: {
+    manageDonors: boolean
+    manageEmergencies: boolean
+    manageCamps: boolean
+    manageAdmins: boolean
+    sendNotifications: boolean
+  }
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  lastLogin?: string
+}

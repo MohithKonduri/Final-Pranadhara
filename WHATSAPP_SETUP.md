@@ -1,215 +1,96 @@
-# WhatsApp Automation Setup Guide
+# WhatsApp Twilio Setup Guide
 
 ## Overview
 
-The WhatsApp automation feature sends instant alerts to registered donors when a blood request is submitted. Messages are sent from the admin WhatsApp account to all compatible donors who have provided their WhatsApp numbers.
+The WhatsApp automation feature now uses **Twilio's Official WhatsApp API** to send instant alerts to registered donors. This is more reliable than the previous browser-based automation and doesn't require keeping a phone online or scanning QR codes regularly.
 
 ## Features
 
-- ✅ Automatic WhatsApp notifications when blood requests are created
-- ✅ Messages sent to compatible donors based on blood group and district
-- ✅ Formatted messages with all emergency details
-- ✅ Admin dashboard for WhatsApp connection management
-- ✅ QR code-based authentication (no API keys needed)
+- ✅ Official Twilio WhatsApp API integration
+- ✅ No QR code scanning required for operation
+- ✅ Highly reliable bulk messaging
+- ✅ Multi-channel support (SMS + WhatsApp via Twilio)
+- ✅ Admin broadcast feature for specific districts
 
 ## Setup Instructions
 
-### Step 1: Install Dependencies
+### Step 1: Twilio Configuration
 
-The required packages are already installed:
-- `whatsapp-web.js` - WhatsApp Web API wrapper
-- `qrcode-terminal` - QR code display in terminal
+1. **Get Twilio Credentials**:
+   - Log in to your [Twilio Console](https://www.twilio.com/console).
+   - Locate your **Account SID** and **Auth Token**.
+   - Get a **Twilio WhatsApp Number** (usually a sandbox number for testing, or a registered business profile for production).
 
-### Step 2: Connect Admin WhatsApp Account
-
-1. **Start the development server** (if not already running):
-   ```bash
-   npm run dev
+2. **Configure Environment Variables**:
+   Add or update these in your `.env.local` file:
+   ```env
+   TWILIO_ACCOUNT_SID=your_account_sid_here
+   TWILIO_AUTH_TOKEN=your_auth_token_here
+   TWILIO_PHONE_NUMBER=your_twilio_sms_number_here
+   TWILIO_WHATSAPP_NUMBER=your_twilio_whatsapp_number_here
    ```
 
-2. **Access Admin Dashboard**:
-   - Go to `/admin/login` and login as admin
-   - Navigate to "WhatsApp Setup" in the sidebar
+3. **WhatsApp Sandbox (For Testing)**:
+   - Go to **Messaging → Try it out → Send a WhatsApp message**.
+   - Your donors must send a specific code (e.g., `join [sandbox-code]`) to your Twilio number to receive messages during the sandbox phase.
 
-3. **Initialize WhatsApp**:
-   - Click the "Initialize WhatsApp" button
-   - The QR code will appear directly on the website (and in the server console)
-   - Scan the QR code with your phone
+### Step 2: Configure Twilio Sandbox Webhooks
 
-4. **Scan QR Code**:
-   - Open WhatsApp on your phone
-   - Go to **Settings → Linked Devices → Link a Device**
-   - Scan the QR code shown on the screen
-   - Wait for the connection to be established
+1. Go to **Messaging → Try it out → Send a WhatsApp message** in the Twilio Console.
+2. Click on the **Sandbox Settings** tab.
+3. Configure your endpoint URLs:
+   - **When a message comes in**: `https://your-domain.com/api/whatsapp/webhook`
+   - **Status callback URL**: `https://your-domain.com/api/whatsapp/status`
+4. Click **Save**.
 
-5. **Verify Connection**:
-   - The status page will automatically update
-   - You should see all green checkmarks when connected
+*Note: For local testing, use a tool like **ngrok** to create a public URL for your local server (e.g., `ngrok http 3000`).*
 
-### Step 3: Configure Donor Registration
+### Step 3: Verify Admin Dashboard
 
-Donors can now provide their WhatsApp number during registration:
-- The WhatsApp number field is optional
-- If left empty, the mobile number will be used
-- Donors with WhatsApp numbers will receive instant alerts
+1. **Access Admin Panel**:
+   - Go to `/admin/whatsapp`
+   - You should see "Twilio Webhook Active" status.
+   - The status should always show "Ready".
 
-### Step 4: Test the System
+### Step 3: Broadcast Messages
 
-1. **Create a Test Blood Request**:
-   - Go to `/emergency` page
-   - Fill out the emergency request form
-   - Submit the request
-
-2. **Check WhatsApp Messages**:
-   - Compatible donors with WhatsApp numbers should receive messages
-   - Messages are sent from the admin WhatsApp account
-   - Check the console for sending status
+1. **Navigate to WhatsApp Broadcast** in the admin panel.
+2. **Filter by District** if needed.
+3. **Compose your message** and click "Send Broadcast".
+4. Messages will be queued and sent via Twilio's API.
 
 ## How It Works
 
-### Request Flow
+### Code Structure
 
-1. **User submits blood request** via `/emergency` page or dashboard emergency contact
-2. **System finds compatible donors**:
-   - Matches blood group compatibility
-   - Filters by district (if specified)
-   - Only includes available donors
-   - Only includes donors with WhatsApp numbers
+- `lib/twilio-service.ts`: Contains the shared logic for both SMS and WhatsApp.
+- `lib/whatsapp-service.ts`: A wrapper that maintains compatibility but uses Twilio under the hood.
+- `app/api/send-whatsapp/route.ts`: Server-side API that triggers Twilio messages.
 
-3. **WhatsApp messages are sent**:
-   - Messages are formatted with all emergency details
-   - Sent in bulk to all compatible donors
-   - 2-second delay between messages to avoid rate limiting
+### Sending Logic
 
-4. **Donors receive alerts**:
-   - Formatted message with priority level
-   - Blood group needed
-   - Location and contact information
-   - Hospital details (if provided)
-
-### Message Format
-
-```
-🚨 URGENT BLOOD REQUEST 🚨
-
-🔴 Priority: CRITICAL
-
-Blood Group Needed: O+
-Location: Hyderabad
-Patient Name: John Doe
-Hospital: City Hospital
-Required Units: 2
-Details: Emergency surgery needed
-
-Contact Information:
-Name: Jane Doe
-Phone: +91 9876543210
-
-━━━━━━━━━━━━━━━━━━━━
-If you can help, please contact the requester directly.
-Thank you for being a lifesaver! ❤️
-
-_NSS BloodConnect System_
-```
-
-## Admin Dashboard
-
-### WhatsApp Status Page (`/admin/whatsapp`)
-
-- **Status Monitoring**: Real-time connection status
-- **Initialization**: One-click WhatsApp connection
-- **Auto-refresh**: Status updates every 5 seconds
-- **Setup Instructions**: Built-in guide
-
-### Status Indicators
-
-- ✅ **Initialized**: WhatsApp client is initialized
-- ✅ **Ready**: WhatsApp is connected and ready to send
-- ✅ **Client Connected**: Active connection to WhatsApp Web
+When an emergency is logged:
+1. The system identifies donors in the specified district with the matching blood group.
+2. It calls the WhatsApp API.
+3. Twilio sends a message from your registered number to the donor's WhatsApp number.
 
 ## Troubleshooting
 
-### WhatsApp Not Connecting
+### Messages Not Received
+1. **Sandbox Check**: If using a Twilio Sandbox, ensure the donor has opted-in by sending the "join" keyword.
+2. **Credentials**: Verify `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN` are correct in the environment variables.
+3. **Number Format**: Ensure phone numbers are in E.164 format (e.g., `+919876543210`). The system tries to format them automatically, but starting with a plus is recommended.
 
-1. **Check Server Console**: Look for QR code or error messages
-2. **Restart Server**: Stop and restart `npm run dev`
-3. **Clear Auth Data**: Delete `.wwebjs_auth` folder and reinitialize
-4. **Check Phone**: Ensure phone with WhatsApp is online
+### API Errors
+- Check the server console logs for `❌ Twilio WhatsApp failed` messages.
+- Common errors include invalid credentials or trying to send to a number that hasn't opted in to the sandbox.
 
-### Messages Not Sending
+## Production Notes
 
-1. **Check Connection Status**: Verify WhatsApp is ready in admin dashboard
-2. **Check Donor Data**: Ensure donors have WhatsApp numbers
-3. **Check Console**: Look for error messages in server console
-4. **Rate Limiting**: Messages are sent with 2-second delays
+For production use, you should:
+1. Register a **WhatsApp Business Profile** through Twilio.
+2. Get your WhatsApp templates approved by Meta (Twilio helps with this).
+3. Use your own verified phone number instead of the generic sandbox.
 
-### QR Code Not Appearing
- 
- 1. **Check Status**: Click "Refresh Status" to check if initialization is complete
- 2. **Check Terminal**: Backup QR code always appears in server console
- 3. **Check Dependencies**: Ensure `qrcode-terminal` is installed
-3. **Restart Server**: Try restarting the development server
-
-## File Structure
-
-```
-lib/
-  ├── whatsapp-service.ts          # Core WhatsApp client service
-  ├── whatsapp-notifications.ts    # Notification formatting and sending
-app/
-  ├── api/
-  │   └── send-whatsapp/
-  │       └── route.ts             # API endpoint for sending messages
-  └── admin/
-      └── whatsapp/
-          └── page.tsx             # Admin WhatsApp configuration page
-components/
-  └── admin-sidebar.tsx            # Updated with WhatsApp link
-```
-
-## Environment Variables
-
-No environment variables are required for basic setup. The WhatsApp connection uses QR code authentication.
-
-Optional:
-- `NEXT_PUBLIC_APP_URL` - For server-side API calls (defaults to localhost:3000)
-
-## Security Notes
-
-- WhatsApp authentication data is stored locally in `.wwebjs_auth` folder
-- This folder is automatically added to `.gitignore`
-- Only one WhatsApp account can be connected at a time
-- Messages are sent from the connected admin account
-
-## Production Deployment (Render.com Recommended)
-
-We have created a `Dockerfile` optimized for deploying this application on Render.com.
-
-1.  **Push your code to GitHub** including the new `Dockerfile`.
-2.  **Create a New Web Service** on Render.
-3.  **Connect your repository**.
-4.  **Select "Docker"** as the Runtime (Render should auto-detect the Dockerfile).
-5.  **Environment Variables**:
-    Add the following environment variables in the Render dashboard:
-    *   `GMAIL_USER`: Your Gmail address
-    *   `GMAIL_APP_PASSWORD`: Your App Password
-    *   All Firebase variables (`NEXT_PUBLIC_FIREBASE_API_KEY`, etc.) from your `.env.local`
-
-### ⚠️ Important Note on Persistence
-On the free tier of Render, the filesystem is **ephemeral**. This means every time you redeploy, the WhatsApp session will be reset, and you will need to scan the QR code again.
-
-To fix this (optional, paid feature):
-1.  Add a **Disk** in Render settings.
-2.  Mount path: `/app/.wwebjs_auth`
-3.  Size: 1GB is sufficient.
-
-This ensures your WhatsApp login stays active across deployments.
-
-## Support
-
-If you encounter issues:
-1. Check the server console for detailed error messages
-2. Verify all dependencies are installed correctly
-3. Ensure the WhatsApp account stays connected
-4. Check that donors have provided WhatsApp numbers
-
+---
+_NSS BloodConnect System - Updated to Twilio WhatsApp_

@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic"
 import { useEffect, useState, Fragment } from "react"
 import { useRouter } from "next/navigation"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { AdminMobileNav } from "@/components/admin-mobile-nav"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -202,7 +203,10 @@ export default function AdminDonorsPage() {
       <AdminSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="border-b border-border bg-background px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Manage Donors</h1>
+          <div className="flex items-center">
+            <AdminMobileNav />
+            <h1 className="text-2xl font-bold">Manage Donors</h1>
+          </div>
           <Button onClick={handleExportCSV} className="gap-2">
             <Download className="h-4 w-4" />
             Export CSV

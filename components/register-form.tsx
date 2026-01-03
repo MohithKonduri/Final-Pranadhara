@@ -160,6 +160,15 @@ export function RegisterForm() {
       return
     }
 
+    // Birthday validation (prevent future dates)
+    const birthDate = new Date(formData.birthdate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (birthDate > today) {
+      setError("Birthdate cannot be in the future")
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -319,6 +328,7 @@ export function RegisterForm() {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                max={new Date().toISOString().split("T")[0]}
               />
             </div>
             <div>

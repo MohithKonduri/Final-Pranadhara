@@ -126,6 +126,17 @@ export default function ProfilePage() {
       const user = auth.currentUser
       if (!user) throw new Error("Not authenticated")
 
+      // Validate last donation date is not in the future
+      if (formData.lastDonationDate && formData.lastDonationDate.trim() !== "") {
+        const selectedDate = new Date(formData.lastDonationDate)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        if (selectedDate > today) {
+          throw new Error("Last donation date cannot be in the future")
+        }
+      }
+
       const donorRef = doc(db, "donors", user.uid)
 
       // Prepare update data, filtering out undefined values
@@ -148,9 +159,11 @@ export default function ProfilePage() {
         updateData.age = Number.parseInt(formData.age)
       }
 
-      // Only add lastDonationDate if it's not empty
+      // Update lastDonationDate - allow setting to null if cleared
       if (formData.lastDonationDate && formData.lastDonationDate.trim() !== "") {
         updateData.lastDonationDate = formData.lastDonationDate
+      } else {
+        updateData.lastDonationDate = null
       }
 
       await updateDoc(donorRef, updateData)
@@ -281,6 +294,7 @@ export default function ProfilePage() {
                       value={formData.lastDonationDate}
                       onChange={handleChange}
                       disabled={saving}
+                      max={new Date().toISOString().split("T")[0]}
                     />
                   </div>
 

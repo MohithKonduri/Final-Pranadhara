@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { AdminMobileNav } from "@/components/admin-mobile-nav"
 import { Card, CardContent } from "@/components/ui/card"
 import { db, auth } from "@/lib/firebase"
 import { collection, getDocs } from "firebase/firestore"
@@ -99,7 +100,8 @@ export default function AdminEmergenciesPage() {
     <div className="flex h-screen">
       <AdminSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="border-b border-border bg-background px-6 py-4">
+        <header className="border-b border-border bg-background px-6 py-4 flex items-center">
+          <AdminMobileNav />
           <h1 className="text-2xl font-bold">Emergency Requests</h1>
         </header>
 
@@ -107,8 +109,8 @@ export default function AdminEmergenciesPage() {
           <div className="max-w-6xl mx-auto space-y-6">
             <Card>
               <CardContent className="py-4">
-                <div className="flex flex-col md:flex-row gap-4 items-end">
-                  <div className="flex-1 space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <label className="text-sm font-medium flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
                       <Filter className="h-4 w-4" /> Filter by Blood Group
                     </label>
@@ -125,7 +127,7 @@ export default function AdminEmergenciesPage() {
                       ))}
                     </select>
                   </div>
-                  <div className="flex-1 space-y-2">
+                  <div className="space-y-2">
                     <label className="text-sm font-medium flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
                       <ArrowUpDown className="h-4 w-4" /> Sort By
                     </label>

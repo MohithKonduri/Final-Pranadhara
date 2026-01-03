@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { AdminMobileNav } from "@/components/admin-mobile-nav"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { db, auth } from "@/lib/firebase"
 import { collection, getDocs, query, where } from "firebase/firestore"
@@ -117,7 +118,8 @@ export default function AdminDashboard() {
     <div className="flex h-screen">
       <AdminSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="border-b border-border bg-background px-6 py-4">
+        <header className="border-b border-border bg-background px-6 py-4 flex items-center">
+          <AdminMobileNav />
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         </header>
 

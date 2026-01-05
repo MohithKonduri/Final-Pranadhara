@@ -74,10 +74,12 @@ export default function TeamPage() {
                                             <CardHeader>
                                                 <div className="mx-auto relative h-48 w-48 mb-6">
                                                     <Image
-                                                        src={formatGoogleDriveUrl(admins[0].photoUrl) || "/placeholder-avatar.svg"}
+                                                        src={admins[0].photoUrl || "/placeholder-avatar.svg"}
                                                         alt={admins[0].name}
                                                         fill
                                                         className="rounded-full object-contain bg-white border-4 border-black shadow-lg"
+                                                        unoptimized
+                                                        referrerPolicy="no-referrer"
                                                         onError={(e) => {
                                                             e.currentTarget.src = "/placeholder-avatar.svg"
                                                         }}
@@ -119,10 +121,12 @@ export default function TeamPage() {
                                                 <CardHeader>
                                                     <div className="mx-auto relative h-32 w-32 mb-4">
                                                         <Image
-                                                            src={formatGoogleDriveUrl(admin.photoUrl) || "/placeholder-avatar.svg"}
+                                                            src={admin.photoUrl || "/placeholder-avatar.svg"}
                                                             alt={admin.name}
                                                             fill
                                                             className="rounded-full object-contain bg-white border-4 border-background shadow-md"
+                                                            unoptimized
+                                                            referrerPolicy="no-referrer"
                                                             onError={(e) => {
                                                                 e.currentTarget.src = "/placeholder-avatar.svg"
                                                             }}

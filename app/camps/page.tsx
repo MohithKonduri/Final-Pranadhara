@@ -70,10 +70,12 @@ export default function CampsPage() {
                                     <div key={camp.id} className="group relative overflow-hidden rounded-lg border bg-background shadow-md transition-all hover:shadow-xl hover:-translate-y-1">
                                         <div className="aspect-video relative overflow-hidden bg-muted">
                                             <Image
-                                                src={formatGoogleDriveUrl(camp.imageUrl) || "/placeholder-camp.svg"}
+                                                src={camp.imageUrl || "/placeholder-camp.svg"}
                                                 alt={camp.name}
                                                 fill
                                                 className="object-cover transition-transform group-hover:scale-105"
+                                                unoptimized
+                                                referrerPolicy="no-referrer"
                                                 onError={(e) => {
                                                     e.currentTarget.src = "/placeholder-camp.svg"
                                                 }}

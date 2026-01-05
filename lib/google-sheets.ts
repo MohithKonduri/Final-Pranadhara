@@ -61,7 +61,8 @@ export function formatGoogleDriveUrl(url: string | undefined): string {
         }
 
         if (id) {
-            return `https://drive.google.com/uc?export=view&id=${id}`;
+            // using thumbnail link is often more reliable for images and avoids some redirects/virus scan warnings
+            return `https://drive.google.com/thumbnail?id=${id}&sz=s1000`;
         }
     } catch (e) {
         console.warn("Error parsing Google Drive URL:", url);
@@ -86,8 +87,8 @@ export function parseCampsData(rows: any[][]): any[] {
     const row0Links = rows[0].filter(hasLink).length;
     const row1Links = rows[1] ? rows[1].filter(hasLink).length : 0;
 
-    // It's horizontal if Row 2 has multiple links and Row 1 has none (titles/names row)
-    const isHorizontal = row1Links > 1 && row0Links === 0;
+    // It's horizontal if Row 2 has link(s) and Row 1 has none (titles/names row)
+    const isHorizontal = row1Links >= 1 && row0Links === 0;
 
     if (isHorizontal) {
         const names = rows[0];
@@ -142,8 +143,8 @@ export function parseManagementData(rows: any[][]): any[] {
     const row0Links = rows[0].filter(hasLink).length;
     const row1Links = rows[1] ? rows[1].filter(hasLink).length : 0;
 
-    // It's horizontal if Row 2 has multiple links and Row 1 has none (roles/titles row)
-    const isHorizontal = row1Links > 1 && row0Links === 0;
+    // It's horizontal if Row 2 has link(s) and Row 1 has none (roles/titles row)
+    const isHorizontal = row1Links >= 1 && row0Links === 0;
 
     // Use horizontal logic if detected
     if (isHorizontal) {
@@ -153,9 +154,9 @@ export function parseManagementData(rows: any[][]): any[] {
 
         return roles.map((role: string, index: number) => ({
             id: `mgmt-h-${index}`,
-            name: role || "Member",        // Role displayed first (big bold)
-            designation: names[index] || "", // Person name displayed below role
-            role: "",
+            name: role || "Member",          // Role as Main Title (Bold)
+            designation: names[index] || "", // Person Name as Subtitle
+            role: "",                        // Optional extra role field
             photoUrl: formatGoogleDriveUrl(photos[index]) || "/placeholder-avatar.svg",
         })).filter(item => item.name && item.name.trim() !== "" && !hasLink(item.name));
     }

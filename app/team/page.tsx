@@ -7,7 +7,8 @@ import { Shield, Mail, Phone } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { fetchGoogleSheetData, parseManagementData } from "@/lib/google-sheets"
+import { db } from "@/lib/firebase"
+import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import { PranadharaAdmin } from "@/lib/types"
 
 export default function TeamPage() {
@@ -17,22 +18,18 @@ export default function TeamPage() {
     useEffect(() => {
         async function loadAdmins() {
             try {
-                const apiKey = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY
-                const spreadsheetId = process.env.NEXT_PUBLIC_ADMINS_SPREADSHEET_ID
+                console.log("Fetching team data from Firebase...")
+                const adminsSnapshot = await getDocs(query(collection(db, "admins"), orderBy("role", "asc")))
+                const adminsData = adminsSnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                })) as PranadharaAdmin[]
 
-                if (apiKey && spreadsheetId) {
-                    console.log("Fetching team data...")
-                    const rawData = await fetchGoogleSheetData({
-                        apiKey,
-                        spreadsheetId,
-                        range: 'Sheet1!A:Z'
-                    })
-                    const parsedAdmins = parseManagementData(rawData)
-                    console.log("Parsed team:", parsedAdmins)
-                    setAdmins(parsedAdmins)
-                } else {
-                    console.log("Missing Google Sheets config")
-                }
+                // Keep only active admins for display
+                const activeAdmins = adminsData.filter(admin => admin.isActive !== false)
+
+                console.log("Fetched team:", activeAdmins)
+                setAdmins(activeAdmins)
             } catch (error) {
                 console.error("Error loading team:", error)
             } finally {

@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Droplet, BarChart3, Users, AlertCircle, LogOut, Smartphone, Menu, X } from "lucide-react"
+import { Droplet, BarChart3, Users, AlertCircle, LogOut, Smartphone, Menu, X, Calendar, Shield } from "lucide-react"
 
 export function AdminMobileNav() {
     const [isOpen, setIsOpen] = useState(false)
@@ -18,17 +18,14 @@ export function AdminMobileNav() {
     }
 
     const links = [
-        { href: "/admin/dashboard", label: "Dashboard", icon: BarChart3 },
+        { href: "/admin/dashboard", label: "Management Home", icon: BarChart3 },
         { href: "/admin/donors", label: "Manage Donors", icon: Users },
         { href: "/admin/emergencies", label: "Emergency Requests", icon: AlertCircle },
+        { href: "/admin/camps", label: "Manage Camps", icon: Calendar },
+        { href: "/admin/admins", label: "Manage Admins", icon: Shield },
         { href: "/admin/whatsapp", label: "WhatsApp Setup", icon: Smartphone },
         { href: "/admin/sms", label: "SMS Setup", icon: Smartphone },
     ]
-    // Note: I added Camps and Admins links because I saw the directories. I should verifying if AdminSidebar has them.
-    // The AdminSidebar file I read earlier DID NOT have camps/admins links in the hardcoded list!
-    // It only had: Dashboard, Donors, Emergencies, WhatsApp, SMS.
-    // But the folders exist. Maybe I should check if the user wants them?
-    // I will check the AdminSidebar again to be PRECISE.
 
     return (
         <>

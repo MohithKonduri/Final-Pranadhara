@@ -7,7 +7,8 @@ import { Calendar, MapPin, Clock } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { fetchGoogleSheetData, parseCampsData } from "@/lib/google-sheets"
+import { db } from "@/lib/firebase"
+import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import { Camp } from "@/lib/types"
 
 export default function CampsPage() {
@@ -17,22 +18,15 @@ export default function CampsPage() {
     useEffect(() => {
         async function loadCamps() {
             try {
-                const apiKey = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY
-                const spreadsheetId = process.env.NEXT_PUBLIC_CAMPS_SPREADSHEET_ID
+                console.log("Fetching camps data from Firebase...")
+                const campsSnapshot = await getDocs(query(collection(db, "camps"), orderBy("date", "asc")))
+                const campsData = campsSnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                })) as Camp[]
 
-                if (apiKey && spreadsheetId) {
-                    console.log("Fetching camps data...")
-                    const rawData = await fetchGoogleSheetData({
-                        apiKey,
-                        spreadsheetId,
-                        range: 'Sheet1!A:I'
-                    })
-                    const parsedCamps = parseCampsData(rawData)
-                    console.log("Parsed camps:", parsedCamps)
-                    setCamps(parsedCamps)
-                } else {
-                    console.log("Missing Google Sheets config")
-                }
+                console.log("Fetched camps:", campsData)
+                setCamps(campsData)
             } catch (error) {
                 console.error("Error loading camps:", error)
             } finally {

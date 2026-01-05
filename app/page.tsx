@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Droplet, Users, Search, AlertCircle, Heart, Calendar, MapPin, Clock, Mail, Phone, Shield } from "lucide-react"
-import { fetchGoogleSheetData, parseCampsData, parseManagementData } from "@/lib/google-sheets"
+import { db } from "@/lib/firebase"
+import { collection, getDocs, query, where, limit, orderBy } from "firebase/firestore"
 
 export default function Home() {
   const [camps, setCamps] = useState<any[]>([])
@@ -21,32 +22,27 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      // TODO: Replace with your actual Google Sheets configuration
-      const GOOGLE_SHEETS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY || ""
-      const CAMPS_SPREADSHEET_ID = process.env.NEXT_PUBLIC_CAMPS_SPREADSHEET_ID || ""
-      const MANAGEMENT_SPREADSHEET_ID = process.env.NEXT_PUBLIC_MANAGEMENT_SPREADSHEET_ID || "1Ku4oIh61y1ncyzOffqbNejBLdLsNXg--nrCacNKwo54"
+      console.log("Fetching home page data from Firebase...")
 
       // Fetch camps data
-      if (CAMPS_SPREADSHEET_ID && GOOGLE_SHEETS_API_KEY) {
-        const campsRows = await fetchGoogleSheetData({
-          spreadsheetId: CAMPS_SPREADSHEET_ID,
-          apiKey: GOOGLE_SHEETS_API_KEY,
-          range: "Sheet1!A:I", // Adjust range as needed
-        })
-        const parsedCamps = parseCampsData(campsRows)
-        setCamps(parsedCamps.slice(0, 3)) // Show only 3 recent camps
-      }
+      const campsSnapshot = await getDocs(query(
+        collection(db, "camps"),
+        where("status", "==", "upcoming"),
+        orderBy("date", "asc"),
+        limit(3)
+      ))
+      const parsedCamps = campsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      setCamps(parsedCamps)
 
       // Fetch management data
-      if (MANAGEMENT_SPREADSHEET_ID && GOOGLE_SHEETS_API_KEY) {
-        const mgmtRows = await fetchGoogleSheetData({
-          spreadsheetId: MANAGEMENT_SPREADSHEET_ID,
-          apiKey: GOOGLE_SHEETS_API_KEY,
-          range: "Sheet1!A:Z", // Using A:Z to capture horizontal columns
-        })
-        const parsedMgmt = parseManagementData(mgmtRows)
-        setManagement(parsedMgmt)
-      }
+      const mgmtSnapshot = await getDocs(query(
+        collection(db, "admins"),
+        where("isActive", "==", true),
+        orderBy("role", "asc")
+      ))
+      const parsedMgmt = mgmtSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      setManagement(parsedMgmt)
+
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {

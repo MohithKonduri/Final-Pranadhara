@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Droplet, BarChart3, Users, AlertCircle, LogOut, Smartphone, Menu, X, Calendar, Shield } from "lucide-react"
+import { Droplet, BarChart3, Users, AlertCircle, LogOut, Smartphone, Menu, X } from "lucide-react"
 
 export function AdminMobileNav() {
     const [isOpen, setIsOpen] = useState(false)
@@ -21,8 +21,6 @@ export function AdminMobileNav() {
         { href: "/admin/dashboard", label: "Management Home", icon: BarChart3 },
         { href: "/admin/donors", label: "Manage Donors", icon: Users },
         { href: "/admin/emergencies", label: "Emergency Requests", icon: AlertCircle },
-        { href: "/admin/camps", label: "Manage Camps", icon: Calendar },
-        { href: "/admin/admins", label: "Manage Admins", icon: Shield },
         { href: "/admin/whatsapp", label: "WhatsApp Setup", icon: Smartphone },
         { href: "/admin/sms", label: "SMS Setup", icon: Smartphone },
     ]

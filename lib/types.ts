@@ -55,6 +55,7 @@ export interface Camp {
   actualDonors?: number
   status?: "upcoming" | "ongoing" | "completed" | "cancelled" // Made optional
   imageUrl?: string // Image URL from Google Sheets
+  gallery?: string[] // Additional images for the camp
   createdAt?: string // Made optional
   updatedAt?: string // Made optional
 }

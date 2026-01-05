@@ -50,49 +50,50 @@ function formatGoogleDriveUrl(url: string | undefined): string {
 
 /**
  * Parse camps data from Google Sheets
- * Expected columns: Name, Location, District, Date, Time, Description, Organizer, Contact, Image URL
- */
-/**
- * Parse camps data from Google Sheets
- * Supports both Vertical (Standard) and Horizontal (Column-based) formats
+ * Supports both Horizontal and Vertical formats
  */
 export function parseCampsData(rows: any[][]): any[] {
     if (rows.length === 0) return []
 
-    // CHECK FOR HORIZONTAL FORMAT (User Case: Names in Row 1, Images in Row 2)
-    // If Row 1 has multiple items and Row 2 has a link, assume horizontal
-    const isHorizontal = rows[0].length > 1 && rows[1] && rows[1].some((cell: string) => cell.includes('http'));
+    const hasLink = (cell: any) =>
+        typeof cell === 'string' && (cell.includes('drive.google.com') || cell.includes('http'));
+
+    // Improved detection: 
+    // Vertical sheets usually have links in the same column across rows.
+    // Horizontal sheets have MANY links in a single row.
+    const row0Links = rows[0].filter(hasLink).length;
+    const row1Links = rows[1] ? rows[1].filter(hasLink).length : 0;
+
+    // It's horizontal if Row 2 has multiple links and Row 1 has none (titles/names row)
+    const isHorizontal = row1Links > 1 && row0Links === 0;
 
     if (isHorizontal) {
-        // Transpose: Each Column is a Camp
-        const campNames = rows[0];
-        const campImages = rows[1] || [];
-        const campDates = rows[2] || [];
-        const campLocations = rows[3] || [];
+        const names = rows[0];
+        const photos = rows[1];
+        const dates = rows[2] || [];
+        const locations = rows[3] || [];
 
-        return campNames.map((name: string, index: number) => ({
+        return names.map((name: string, index: number) => ({
             id: `camp-h-${index}`,
-            name: name || "Untitled Camp",
-            location: campLocations[index] || "Location TBD",
+            name: name || "Camp",
+            location: locations[index] || "Location TBD",
             district: "",
-            date: campDates[index] || "Coming Soon",
+            date: dates[index] || "Coming Soon",
             time: "TBA",
             description: "",
             organizer: "NSS Pranadhara",
             contact: "",
-            imageUrl: formatGoogleDriveUrl(campImages[index]) || "/placeholder-camp.svg",
+            imageUrl: formatGoogleDriveUrl(photos[index]) || "/placeholder-camp.svg",
             status: "upcoming"
-        })).filter((camp: any) => camp.name && camp.name.trim() !== "");
+        })).filter(camp => camp.name && camp.name.trim() !== "" && !hasLink(camp.name));
     }
 
-    // VERTICAL FORMAT (Standard)
-    // Row 1 assumed to be data if it doesn't look like a header, OR we skip header if standard
-    // Let's assume user might start at Row 1 just like Admins
+    // Default Vertical Format (Standard)
     const startRow = (rows[0][0] === "Name") ? 1 : 0;
     const dataRows = rows.slice(startRow);
 
     return dataRows.map((row, index) => ({
-        id: `camp-${index}`,
+        id: `camp-v-${index}`,
         name: row[0] || "",
         location: row[1] || "",
         district: row[2] || "",
@@ -103,38 +104,51 @@ export function parseCampsData(rows: any[][]): any[] {
         contact: row[7] || "",
         imageUrl: formatGoogleDriveUrl(row[8]) || "/placeholder-camp.svg",
         status: "upcoming"
-    })).filter(camp => camp.name && camp.name.trim() !== "")
+    })).filter(camp => camp.name && camp.name.trim() !== "" && !hasLink(camp.name))
 }
 
 /**
  * Parse management team data from Google Sheets
- * Supports Horizontal format (Names/Designations in Row 1, Photos in Row 2)
+ * Supports Horizontal format (Names in Row 1, Links in Row 2)
  */
 export function parseManagementData(rows: any[][]): any[] {
     if (rows.length === 0) return []
 
-    // Check for Horizontal Format (Image links in Row 2)
-    const isHorizontal = rows[0].length > 1 && rows[1] && rows[1].some((cell: any) => typeof cell === 'string' && (cell.includes('http') || cell.includes('drive.google.com')));
+    const hasLink = (cell: any) =>
+        typeof cell === 'string' && (cell.includes('drive.google.com') || cell.includes('http'));
 
+    const row0Links = rows[0].filter(hasLink).length;
+    const row1Links = rows[1] ? rows[1].filter(hasLink).length : 0;
+
+    // It's horizontal if Row 2 has multiple links and Row 1 has none (roles/titles row)
+    const isHorizontal = row1Links > 1 && row0Links === 0;
+
+    // Use horizontal logic if detected
     if (isHorizontal) {
-        const titles = rows[0];
-        const photos = rows[1] || [];
+        const roles = rows[0];     // Row 1 (Chairman, CEO, etc.)
+        const photos = rows[1];    // Row 2 (Photos)
+        const names = rows[2] || []; // Row 3 (Actual Names)
 
-        return titles.map((title: string, index: number) => ({
-            id: `member-${index}`,
-            name: title || "Management",
-            designation: "",
+        return roles.map((role: string, index: number) => ({
+            id: `mgmt-h-${index}`,
+            name: role || "Member",        // Role displayed first (big bold)
+            designation: names[index] || "", // Person name displayed below role
             role: "",
             photoUrl: formatGoogleDriveUrl(photos[index]) || "/placeholder-avatar.svg",
-        })).filter((item: any) => item.name && item.name.trim() !== "");
+        })).filter(item => item.name && item.name.trim() !== "" && !hasLink(item.name));
     }
 
-    // Standard Vertical Format
+    // Standard Vertical Format (Name, Role, ..., Designation, Photo)
     return rows.map((row, index) => ({
-        id: `mgmt-${index}`,
+        id: `mgmt-v-${index}`,
         name: row[0] || "",
-        designation: row[1] || "",
-        role: row[3] || "",
-        photoUrl: formatGoogleDriveUrl(row[4]) || "/placeholder-avatar.svg",
-    })).filter(item => item.name && item.name.trim() !== "")
+        role: row[1] || "",        // Column B
+        designation: row[3] || "", // Column D
+        photoUrl: formatGoogleDriveUrl(row[4]) || "/placeholder-avatar.svg", // Column E
+    })).filter(item =>
+        item.name &&
+        item.name.trim() !== "" &&
+        !hasLink(item.name) &&
+        item.name !== "Name"
+    )
 }

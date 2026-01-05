@@ -7,10 +7,8 @@ import { Shield, Mail, Phone } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { db } from "@/lib/firebase"
-import { collection, getDocs, query, orderBy } from "firebase/firestore"
-import { PranadharaAdmin } from "@/lib/types"
-import { formatGoogleDriveUrl } from "@/lib/google-sheets"
+import { fetchGoogleSheetData, parseManagementData, formatGoogleDriveUrl } from "@/lib/google-sheets"
+import type { PranadharaAdmin } from "@/lib/types"
 
 export default function TeamPage() {
     const [admins, setAdmins] = useState<PranadharaAdmin[]>([])
@@ -18,19 +16,26 @@ export default function TeamPage() {
 
     useEffect(() => {
         async function loadAdmins() {
+            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY
+            const spreadsheetId = process.env.NEXT_PUBLIC_ADMINS_SPREADSHEET_ID
+
+            if (!apiKey || !spreadsheetId) {
+                console.error("Google Sheets configuration is missing.")
+                setLoading(false)
+                return
+            }
+
             try {
-                console.log("Fetching team data from Firebase...")
-                const adminsSnapshot = await getDocs(query(collection(db, "admins"), orderBy("role", "asc")))
-                const adminsData = adminsSnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as PranadharaAdmin[]
+                console.log("Fetching team data from Google Sheets...")
+                const data = await fetchGoogleSheetData({
+                    apiKey,
+                    spreadsheetId,
+                    range: "Sheet1!A:Z",
+                })
 
-                // Keep only active admins for display
-                const activeAdmins = adminsData.filter(admin => admin.isActive !== false)
-
-                console.log("Fetched team:", activeAdmins)
-                setAdmins(activeAdmins)
+                const parsedAdmins = parseManagementData(data)
+                console.log("Parsed team:", parsedAdmins)
+                setAdmins(parsedAdmins)
             } catch (error) {
                 console.error("Error loading team:", error)
             } finally {

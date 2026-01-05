@@ -7,10 +7,8 @@ import { Calendar, MapPin, Clock } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { db } from "@/lib/firebase"
-import { collection, getDocs, query, orderBy } from "firebase/firestore"
-import { Camp } from "@/lib/types"
-import { formatGoogleDriveUrl } from "@/lib/google-sheets"
+import { fetchGoogleSheetData, parseCampsData, formatGoogleDriveUrl } from "@/lib/google-sheets"
+import type { Camp } from "@/lib/types"
 
 export default function CampsPage() {
     const [camps, setCamps] = useState<Camp[]>([])
@@ -18,16 +16,26 @@ export default function CampsPage() {
 
     useEffect(() => {
         async function loadCamps() {
-            try {
-                console.log("Fetching camps data from Firebase...")
-                const campsSnapshot = await getDocs(query(collection(db, "camps"), orderBy("date", "asc")))
-                const campsData = campsSnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Camp[]
+            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY
+            const spreadsheetId = process.env.NEXT_PUBLIC_CAMPS_SPREADSHEET_ID
 
-                console.log("Fetched camps:", campsData)
-                setCamps(campsData)
+            if (!apiKey || !spreadsheetId) {
+                console.error("Google Sheets configuration is missing.")
+                setLoading(false)
+                return
+            }
+
+            try {
+                console.log("Fetching camps data from Google Sheets...")
+                const data = await fetchGoogleSheetData({
+                    apiKey,
+                    spreadsheetId,
+                    range: "Sheet1!A:Z",
+                })
+
+                const parsedCamps = parseCampsData(data)
+                console.log("Parsed camps:", parsedCamps)
+                setCamps(parsedCamps)
             } catch (error) {
                 console.error("Error loading camps:", error)
             } finally {

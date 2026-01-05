@@ -8,9 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Droplet, Users, Search, AlertCircle, Heart, Calendar, MapPin, Clock, Mail, Phone, Shield } from "lucide-react"
-import { db } from "@/lib/firebase"
-import { collection, getDocs, query, where, limit, orderBy } from "firebase/firestore"
-import { formatGoogleDriveUrl } from "@/lib/google-sheets"
+import { fetchGoogleSheetData, parseCampsData, parseManagementData, formatGoogleDriveUrl } from "@/lib/google-sheets"
 
 export default function Home() {
   const [camps, setCamps] = useState<any[]>([])
@@ -23,26 +21,26 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      console.log("Fetching home page data from Firebase...")
+      console.log("Fetching home page data from Google Sheets...")
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY
+      const campsSheetId = process.env.NEXT_PUBLIC_CAMPS_SPREADSHEET_ID
+      const mgmtSheetId = process.env.NEXT_PUBLIC_MANAGEMENT_SPREADSHEET_ID
 
-      // Fetch camps data
-      const campsSnapshot = await getDocs(query(
-        collection(db, "camps"),
-        where("status", "==", "upcoming"),
-        orderBy("date", "asc"),
-        limit(3)
-      ))
-      const parsedCamps = campsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      setCamps(parsedCamps)
+      if (apiKey && campsSheetId) {
+        // Fetch camps
+        const campsData = await fetchGoogleSheetData({ apiKey, spreadsheetId: campsSheetId, range: "Sheet1!A:Z" })
+        const parsedCamps = parseCampsData(campsData)
+        // Sort and limit in memory
+        parsedCamps.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        setCamps(parsedCamps.slice(0, 3))
+      }
 
-      // Fetch management data
-      const mgmtSnapshot = await getDocs(query(
-        collection(db, "admins"),
-        where("isActive", "==", true),
-        orderBy("role", "asc")
-      ))
-      const parsedMgmt = mgmtSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      setManagement(parsedMgmt)
+      if (apiKey && mgmtSheetId) {
+        // Fetch management
+        const mgmtData = await fetchGoogleSheetData({ apiKey, spreadsheetId: mgmtSheetId, range: "Sheet1!A:Z" })
+        const parsedMgmt = parseManagementData(mgmtData)
+        setManagement(parsedMgmt)
+      }
 
     } catch (error) {
       console.error("Error fetching data:", error)

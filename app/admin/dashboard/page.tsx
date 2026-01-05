@@ -10,10 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { db, auth } from "@/lib/firebase"
 import { collection, getDocs, query, where, addDoc } from "firebase/firestore"
 import { onAuthStateChanged } from "firebase/auth"
-import { BarChart3, Users, AlertCircle, TrendingUp, RefreshCw, Database, Shield, Calendar } from "lucide-react"
-import { fetchGoogleSheetData, parseCampsData, parseManagementData } from "@/lib/google-sheets"
+import { BarChart3, Users, AlertCircle, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
 import type { Donor } from "@/lib/types"
 
 export default function AdminDashboard() {
@@ -25,7 +23,6 @@ export default function AdminDashboard() {
     bloodGroups: {} as Record<string, number>,
   })
   const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -96,97 +93,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const syncCamps = async () => {
-    setSyncing("camps")
-    try {
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY
-      const spreadsheetId = process.env.NEXT_PUBLIC_CAMPS_SPREADSHEET_ID
 
-      if (!apiKey || !spreadsheetId) {
-        toast.error("Google Sheets configuration missing")
-        return
-      }
-
-      const rawData = await fetchGoogleSheetData({ apiKey, spreadsheetId, range: "Sheet1!A:I" })
-      const parsedCamps = parseCampsData(rawData)
-
-      let imported = 0
-      for (const camp of parsedCamps) {
-        // Simple duplicate check by name and location
-        const q = query(collection(db, "camps"), where("name", "==", camp.name), where("location", "==", camp.location))
-        const existing = await getDocs(q)
-
-        if (existing.empty) {
-          const { id, ...campData } = camp
-          await addDoc(collection(db, "camps"), {
-            ...campData,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          })
-          imported++
-        }
-      }
-
-      toast.success(`Successfully imported ${imported} new camps!`)
-    } catch (err) {
-      console.error("Sync error:", err)
-      toast.error("Failed to sync camps")
-    } finally {
-      setSyncing(null)
-    }
-  }
-
-  const syncTeam = async () => {
-    setSyncing("team")
-    try {
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY
-      const spreadsheetId = process.env.NEXT_PUBLIC_ADMINS_SPREADSHEET_ID
-
-      if (!apiKey || !spreadsheetId) {
-        toast.error("Google Sheets configuration missing")
-        return
-      }
-
-      const rawData = await fetchGoogleSheetData({ apiKey, spreadsheetId, range: "Sheet1!A:Z" })
-      const parsedMgmt = parseManagementData(rawData)
-
-      let imported = 0
-      for (const member of parsedMgmt) {
-        // Duplicate check by name
-        const q = query(collection(db, "admins"), where("name", "==", member.name))
-        const existing = await getDocs(q)
-
-        if (existing.empty) {
-          await addDoc(collection(db, "admins"), {
-            name: member.name,
-            email: `${member.name.toLowerCase().replace(/\s+/g, '')}@pranadhara.org`, // Placeholder
-            phone: "",
-            role: "moderator",
-            designation: member.designation || member.name,
-            photoUrl: member.photoUrl,
-            isActive: true,
-            permissions: {
-              manageDonors: false,
-              manageEmergencies: false,
-              manageCamps: false,
-              manageAdmins: false,
-              sendNotifications: false
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          })
-          imported++
-        }
-      }
-
-      toast.success(`Successfully imported ${imported} team members!`)
-    } catch (err) {
-      console.error("Sync error:", err)
-      toast.error("Failed to sync team")
-    } finally {
-      setSyncing(null)
-    }
-  }
 
   if (error) {
     return (
@@ -291,53 +198,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            {/* Data Migration / Sync */}
-            <Card className="border-primary/20 bg-primary/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary" />
-                  Data Migration (Import from Sheets)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  If your data is currently in Google Sheets, use these buttons to import it into the new management system.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button
-                    onClick={syncCamps}
-                    disabled={!!syncing}
-                    variant="outline"
-                    className="flex items-center gap-2 h-auto py-4 justify-start px-6"
-                  >
-                    <div className="bg-blue-100 p-2 rounded-full">
-                      <Calendar className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="text-left">
-                      <div className="font-bold">Sync Camps</div>
-                      <div className="text-xs text-muted-foreground">Import from Camps Sheet</div>
-                    </div>
-                    {syncing === "camps" && <RefreshCw className="h-4 w-4 ml-auto animate-spin" />}
-                  </Button>
 
-                  <Button
-                    onClick={syncTeam}
-                    disabled={!!syncing}
-                    variant="outline"
-                    className="flex items-center gap-2 h-auto py-4 justify-start px-6"
-                  >
-                    <div className="bg-purple-100 p-2 rounded-full">
-                      <Shield className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="text-left">
-                      <div className="font-bold">Sync Team</div>
-                      <div className="text-xs text-muted-foreground">Import from Team Sheet</div>
-                    </div>
-                    {syncing === "team" && <RefreshCw className="h-4 w-4 ml-auto animate-spin" />}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Quick Actions */}
             <Card>

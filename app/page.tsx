@@ -10,6 +10,7 @@ import { Footer } from "@/components/footer"
 import { Droplet, Users, Search, AlertCircle, Heart, Calendar, MapPin, Clock, Mail, Phone, Shield } from "lucide-react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, query, where, limit, orderBy } from "firebase/firestore"
+import { formatGoogleDriveUrl } from "@/lib/google-sheets"
 
 export default function Home() {
   const [camps, setCamps] = useState<any[]>([])
@@ -67,7 +68,7 @@ export default function Home() {
                       <div key={member.id} className="flex flex-col items-center group">
                         <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-32 md:h-32 mb-3 rounded-full overflow-hidden border-4 border-background shadow-xl scale-95 group-hover:scale-105 transition-transform duration-300 bg-muted">
                           <Image
-                            src={member.photoUrl || "/placeholder-avatar.svg"}
+                            src={formatGoogleDriveUrl(member.photoUrl) || "/placeholder-avatar.svg"}
                             alt={member.name}
                             fill
                             className="object-cover"

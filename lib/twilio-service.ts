@@ -1,8 +1,9 @@
 // Server-side only - prevent client-side bundling
 if (typeof window !== "undefined") {
-    throw new Error("twilio-service can only be used server-side")
+    // This file should never be imported on the client
 }
 
+// Use type-only import for the type
 import type { Twilio } from 'twilio';
 
 // Twilio credentials from environment variables
@@ -11,19 +12,25 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
 // Initialize Twilio client
-// We use a getter to avoid initialization errors if environment variables are missing during build
 let client: Twilio | null = null;
 
 async function getTwilioClient() {
+    if (typeof window !== "undefined") return null;
+
     if (!accountSid || !authToken) {
         console.warn('⚠️ Twilio credentials missing from environment variables');
         return null;
     }
 
     if (!client) {
-        const twilioModule = await import('twilio');
-        const twilio = twilioModule.default;
-        client = twilio(accountSid, authToken);
+        try {
+            // Use dynamic require/import to avoid bundling on client
+            const twilio = (await import('twilio')).default;
+            client = twilio(accountSid, authToken);
+        } catch (e) {
+            console.error("Failed to load twilio module:", e);
+            return null;
+        }
     }
     return client;
 }

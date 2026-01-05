@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sendWhatsApp, sendEmergencyWhatsApp } from "@/lib/twilio-service"
+import { sendWhatsApp, sendEmergencyWhatsApp, sendSMS } from "@/lib/twilio-service"
 
 // Mark this route as server-only
 export const runtime = "nodejs"
@@ -12,6 +12,12 @@ export async function POST(request: NextRequest) {
 
     // Single message
     if (phoneNumber && message) {
+      if (body._isSmsFallback) {
+        console.log(`📱 Sending single SMS via Twilio fallback to ${phoneNumber}`)
+        const success = await sendSMS({ to: phoneNumber, body: message })
+        return NextResponse.json({ success, message: success ? "SMS sent" : "SMS failed" })
+      }
+
       console.log(`📱 Sending single WhatsApp message via Twilio to ${phoneNumber}`)
       const result = await sendWhatsApp({ to: phoneNumber, body: message })
 

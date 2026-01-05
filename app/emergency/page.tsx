@@ -16,7 +16,7 @@ import { doc, getDoc } from "firebase/firestore"
 import { createEmergencyRequest, searchDonors } from "@/lib/firestore-utils"
 import { sendEmail, sendEmergencyNotifications, ADMIN_EMAIL } from "@/lib/email-service"
 import { sendBloodRequestWhatsAppNotifications } from "@/lib/whatsapp-notifications"
-import { sendSMS } from "@/lib/twilio-service"
+// sendSMS will be handled via API to avoid build errors
 
 const BLOOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 const DISTRICTS = [
@@ -283,11 +283,16 @@ export default function EmergencyPage() {
 
             const smsBody = `🚨 NSS URGENT: ${formData.bloodGroup} needed at ${formData.district}. Priority: ${formData.urgency.toUpperCase()}. Contact ${formData.contactName}: ${formData.contactPhone}. Details: ${formData.description.substring(0, 50)}...`
 
-            // Send SMS to each donor
+            // Send SMS to each donor via API
             await Promise.all(donorsWithPhones.map(donor =>
-              sendSMS({
-                to: donor.phone,
-                body: smsBody
+              fetch('/api/send-whatsapp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  phoneNumber: donor.phone,
+                  message: smsBody,
+                  _isSmsFallback: true // Internal hint
+                })
               })
             ))
           }

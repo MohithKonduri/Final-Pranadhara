@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import { Camp } from "@/lib/types"
+import { formatGoogleDriveUrl } from "@/lib/google-sheets"
 
 export default function CampsPage() {
     const [camps, setCamps] = useState<Camp[]>([])
@@ -61,7 +62,7 @@ export default function CampsPage() {
                                     <div key={camp.id} className="group relative overflow-hidden rounded-lg border bg-background shadow-md transition-all hover:shadow-xl hover:-translate-y-1">
                                         <div className="aspect-video relative overflow-hidden bg-muted">
                                             <Image
-                                                src={camp.imageUrl || "/placeholder-camp.svg"}
+                                                src={formatGoogleDriveUrl(camp.imageUrl) || "/placeholder-camp.svg"}
                                                 alt={camp.name}
                                                 fill
                                                 className="object-cover transition-transform group-hover:scale-105"

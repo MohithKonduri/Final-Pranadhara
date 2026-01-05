@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, query, orderBy } from "firebase/firestore"
 import { PranadharaAdmin } from "@/lib/types"
+import { formatGoogleDriveUrl } from "@/lib/google-sheets"
 
 export default function TeamPage() {
     const [admins, setAdmins] = useState<PranadharaAdmin[]>([])
@@ -68,7 +69,7 @@ export default function TeamPage() {
                                             <CardHeader>
                                                 <div className="mx-auto relative h-48 w-48 mb-6">
                                                     <Image
-                                                        src={admins[0].photoUrl || "/placeholder-avatar.svg"}
+                                                        src={formatGoogleDriveUrl(admins[0].photoUrl) || "/placeholder-avatar.svg"}
                                                         alt={admins[0].name}
                                                         fill
                                                         className="rounded-full object-contain bg-white border-4 border-black shadow-lg"
@@ -113,7 +114,7 @@ export default function TeamPage() {
                                                 <CardHeader>
                                                     <div className="mx-auto relative h-32 w-32 mb-4">
                                                         <Image
-                                                            src={admin.photoUrl || "/placeholder-avatar.svg"}
+                                                            src={formatGoogleDriveUrl(admin.photoUrl) || "/placeholder-avatar.svg"}
                                                             alt={admin.name}
                                                             fill
                                                             className="rounded-full object-contain bg-white border-4 border-background shadow-md"

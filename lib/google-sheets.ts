@@ -34,17 +34,39 @@ export async function fetchGoogleSheetData(config: GoogleSheetsConfig): Promise<
 
 /**
  * Helper to convert Google Drive view links to direct image links
+ * Works for both:
+ * 1. https://drive.google.com/file/d/ID/view
+ * 2. https://drive.google.com/open?id=ID
+ * 3. Direct IDs or other formats
  */
-function formatGoogleDriveUrl(url: string | undefined): string {
+export function formatGoogleDriveUrl(url: string | undefined): string {
     if (!url) return "";
-    if (url.includes("drive.google.com") && url.includes("/file/d/")) {
-        try {
-            const id = url.split("/file/d/")[1].split("/")[0];
-            return `https://drive.google.com/uc?export=view&id=${id}`;
-        } catch (e) {
-            return url;
+
+    // If it's already a direct link or placeholder, return it
+    if (url.startsWith("/") || url.startsWith("data:")) return url;
+
+    try {
+        let id = "";
+
+        if (url.includes("drive.google.com")) {
+            if (url.includes("/file/d/")) {
+                id = url.split("/file/d/")[1].split("/")[0];
+            } else if (url.includes("?id=")) {
+                const params = new URL(url).searchParams;
+                id = params.get("id") || "";
+            }
+        } else if (url.includes("docs.google.com/uc")) {
+            const params = new URL(url).searchParams;
+            id = params.get("id") || "";
         }
+
+        if (id) {
+            return `https://drive.google.com/uc?export=view&id=${id}`;
+        }
+    } catch (e) {
+        console.warn("Error parsing Google Drive URL:", url);
     }
+
     return url;
 }
 
